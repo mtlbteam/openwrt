@@ -68,9 +68,6 @@ if [ -z "$DOWNLOAD_URL" ]; then
   exit 1
 fi
 
-echo $ASSET_NAME
-echo $DOWNLOAD_URL
-
 curl -L -o /tmp/mtlb-bin "$DOWNLOAD_URL"
 chmod +x /tmp/mtlb-bin
 echo "✅ Downloaded $ASSET_NAME"
