@@ -59,4 +59,5 @@ jobs:
           GOARCH: "mipsle"
           GOMIPS: "softfloat"
         run: go build -v -trimpath -ldflags="-s -w" -o dist/zod-vpn-mips
+#
 
