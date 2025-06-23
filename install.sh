@@ -1,5 +1,20 @@
 #!/bin/sh
 
+ARCH=$(uname -m)
+
+case "$ARCH" in
+  aarch64)
+    echo "arm64"
+    ;;
+  mips|mipsel)
+    echo "mips"
+    ;;
+  *)
+    echo "Unsupported architecture: $ARCH"
+    exit 1
+    ;;
+esac
+
 if ! command -v wget >/dev/null 2>&1; then
   echo "wget not found, installing..."
   opkg update && opkg install wget
