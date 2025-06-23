@@ -71,10 +71,8 @@ fi
 echo $ASSET_NAME
 echo $DOWNLOAD_URL
 
-TARGET_PATH="/tmp/mtlb-bin"
-
-curl -L -o "$TARGET_PATH" "$DOWNLOAD_URL"
-chmod +x "$TARGET_PATH"
+curl -L -o /tmp/mtlb-bin "$DOWNLOAD_URL"
+chmod +x /tmp/mtlb-bin
 echo "✅ Downloaded $ASSET_NAME"
 
 if /etc/init.d/mtlb status | grep -q "running"; then
