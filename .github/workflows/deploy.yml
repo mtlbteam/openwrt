@@ -1,0 +1,17 @@
+name: Build
+
+on:
+  push:
+
+jobs:
+  clone:
+    runs-on: ubuntu-latest
+    steps:
+#      - name: Checkout GitHub repo
+#        uses: actions/checkout@v4
+
+      - name: Clone GitLab repo
+        run: |
+          git clone https://oauth2:${{ secrets.GITLAB_TOKEN }}@gitlab.com/mtlb.team/web.mtlb.team.git
+
+      - run: ls
