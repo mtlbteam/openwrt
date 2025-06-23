@@ -88,8 +88,6 @@ cat << 'EOF' > /etc/init.d/mtlb
 #!/bin/sh /etc/rc.common
 
 START=99
-STOP=10
-
 USE_PROCD=1
 
 start_service() {
