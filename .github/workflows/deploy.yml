@@ -16,16 +16,16 @@ jobs:
         run: |
           git clone https://oauth2:${{ secrets.GITLAB_TOKEN }}@gitlab.com/${{ vars.GITLAB_GROUP }}/${{ vars.WEB_REPO }}.git
 
-      - name: Change directory
-        run: cd ${{ vars.WEB_REPO }}
-
       - name: Install dependencies
+        working-directory: ${{ vars.WEB_REPO }}
         run: npm ci
 
       - name: Create environment
+        working-directory: ${{ vars.WEB_REPO }}
         run: echo "VITE_API_URL=${{ vars.WEB_API_URL }}" > .env.local
 
       - name: Build web
+        working-directory: ${{ vars.WEB_REPO }}
         run: npm run build
 
   build-bin:
@@ -45,16 +45,15 @@ jobs:
       - name: Copy web
         run: cp ${{ vars.WEB_REPO }}/dist ${{ vars.BIN_REPO }}/internal/web
 
-      - name: Change directory
-        run: cd ${{ vars.BIN_REPO }}
-
       - name: Build arm64
+        working-directory: ${{ vars.BIN_REPO }}
         env:
           GOOS: "linux"
           GOARCH: "arm64"
         run: go build -v -trimpath -ldflags="-s -w" -o dist/zod-vpn-arm64
 
       - name: Build mips
+        working-directory: ${{ vars.BIN_REPO }}
         env:
           GOOS: "linux"
           GOARCH: "mipsle"
