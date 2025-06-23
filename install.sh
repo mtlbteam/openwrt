@@ -74,7 +74,7 @@ echo $DOWNLOAD_URL
 TARGET_PATH="/tmp/${ASSET_NAME}"
 
 curl -L -o "$TARGET_PATH" "$DOWNLOAD_URL"
-chmod +x "$ASSET_NAME"
+chmod +x "$TARGET_PATH"
 echo "✅ Downloaded $ASSET_NAME"
 
 if /etc/init.d/mtlb status | grep -q "running"; then
@@ -84,7 +84,7 @@ fi
 
 echo "Create service"
 
-cat << 'EOF' > /etc/init.d/mtlb
+cat << EOF > /etc/init.d/mtlb
 #!/bin/sh /etc/rc.common
 
 START=99
