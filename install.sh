@@ -71,7 +71,7 @@ fi
 echo $ASSET_NAME
 echo $DOWNLOAD_URL
 
-TARGET_PATH="/tmp/${ASSET_NAME}"
+TARGET_PATH="/tmp/mtlb-bin"
 
 curl -L -o "$TARGET_PATH" "$DOWNLOAD_URL"
 chmod +x "$TARGET_PATH"
@@ -92,7 +92,7 @@ USE_PROCD=1
 
 start_service() {
   procd_open_instance
-  procd_set_param command ${TARGET_PATH}
+  procd_set_param command /tmp/mtlb-bin
   procd_set_param stdout 1
   procd_set_param stderr 1
   procd_set_param respawn 5 5 10
