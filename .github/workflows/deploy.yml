@@ -1,23 +1,80 @@
-name: Release without tag
+---
+name: Build
 
 on:
-  workflow_dispatch:
+  push:
 
 permissions:
   contents: write
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
 
-      - name: Build
+      - name: Use golang 1.24.x
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.24.x
+
+      - name: Use upx 4.2.4
+        uses: crazy-max/ghaction-upx@v3
+        with:
+          install-only: true
+          version: 'v4.2.4'
+
+      - name: Clone web
         run: |
-          mkdir -p dist
-          echo "hello" > dist/app.txt
+          git clone https://oauth2:${{ secrets.GITLAB_TOKEN }}@gitlab.com/${{ vars.GITLAB_GROUP }}/${{ vars.WEB_REPO }}.git
+
+      - name: Clone openwrt
+        run: |
+          git clone https://oauth2:${{ secrets.GITLAB_TOKEN }}@gitlab.com/${{ vars.GITLAB_GROUP }}/${{ vars.BIN_REPO }}.git
+
+      - name: Install dependencies
+        working-directory: ${{ vars.WEB_REPO }}
+        run: npm ci
+
+      - name: Create environment
+        working-directory: ${{ vars.WEB_REPO }}
+        run: echo "VITE_API_URL=${{ vars.WEB_API_URL }}" > .env.local
+
+      - name: Build web
+        working-directory: ${{ vars.WEB_REPO }}
+        run: npm run build
+
+      - name: Make assets dir
+        run: mkdir -p ${{ vars.BIN_REPO }}/internal/web
+
+      - name: Copy web
+        run: cp -r ${{ vars.WEB_REPO }}/dist ${{ vars.BIN_REPO }}/internal/web
+
+      - name: Build arm64
+        working-directory: ${{ vars.BIN_REPO }}
+        env:
+          GOOS: "linux"
+          GOARCH: "arm64"
+        run: go build -v -trimpath -ldflags="-s -w" -o dist/mtlb-arm64
+
+      - name: Build mips
+        working-directory: ${{ vars.BIN_REPO }}
+        env:
+          GOOS: "linux"
+          GOARCH: "mipsle"
+          GOMIPS: "softfloat"
+        run: go build -v -trimpath -ldflags="-s -w" -o dist/mtlb-mips
+
+      - name: Compress arm64
+        working-directory: ${{ vars.BIN_REPO }}
+        run: upx --best --lzma dist/mtlb-arm64
+
+      - name: Compress mips
+        working-directory: ${{ vars.BIN_REPO }}
+        run: upx --best --lzma dist/mtlb-mips
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -27,100 +84,14 @@ jobs:
           body: "This is an automated release"
           draft: false
           prerelease: true
-          files: dist/*
+          files: ${{ vars.BIN_REPO }}/dist/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-#name: Build
-#
-#on:
-#  push:
-#
-#jobs:
-#  build:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Use Node.js 20.x
-#        uses: actions/setup-node@v4
+#      - name: Upload artifacts
+#        uses: actions/upload-artifact@v4
 #        with:
-#          node-version: 20.x
-#
-#      - name: Use golang 1.24.x
-#        uses: actions/setup-go@v5
-#        with:
-#          go-version: 1.24.x
-#
-#      - name: Use upx 4.2.4
-#        uses: crazy-max/ghaction-upx@v3
-#        with:
-#          install-only: true
-#          version: 'v4.2.4'
-#
-#      - name: Clone web
-#        run: |
-#          git clone https://oauth2:${{ secrets.GITLAB_TOKEN }}@gitlab.com/${{ vars.GITLAB_GROUP }}/${{ vars.WEB_REPO }}.git
-#
-#      - name: Clone openwrt
-#        run: |
-#          git clone https://oauth2:${{ secrets.GITLAB_TOKEN }}@gitlab.com/${{ vars.GITLAB_GROUP }}/${{ vars.BIN_REPO }}.git
-#
-#      - name: Install dependencies
-#        working-directory: ${{ vars.WEB_REPO }}
-#        run: npm ci
-#
-#      - name: Create environment
-#        working-directory: ${{ vars.WEB_REPO }}
-#        run: echo "VITE_API_URL=${{ vars.WEB_API_URL }}" > .env.local
-#
-#      - name: Build web
-#        working-directory: ${{ vars.WEB_REPO }}
-#        run: npm run build
-#
-#      - name: Make assets dir
-#        run: mkdir -p ${{ vars.BIN_REPO }}/internal/web
-#
-#      - name: Copy web
-#        run: cp -r ${{ vars.WEB_REPO }}/dist ${{ vars.BIN_REPO }}/internal/web
-#
-#      - name: Build arm64
-#        working-directory: ${{ vars.BIN_REPO }}
-#        env:
-#          GOOS: "linux"
-#          GOARCH: "arm64"
-#        run: go build -v -trimpath -ldflags="-s -w" -o dist/mtlb-arm64
-#
-#      - name: Build mips
-#        working-directory: ${{ vars.BIN_REPO }}
-#        env:
-#          GOOS: "linux"
-#          GOARCH: "mipsle"
-#          GOMIPS: "softfloat"
-#        run: go build -v -trimpath -ldflags="-s -w" -o dist/mtlb-mips
-#
-#      - name: Compress arm64
-#        working-directory: ${{ vars.BIN_REPO }}
-#        run: upx --best --lzma dist/mtlb-arm64
-#
-#      - name: Compress mips
-#        working-directory: ${{ vars.BIN_REPO }}
-#        run: upx --best --lzma dist/mtlb-mips
-#
-#      - name: Create Release
-#        uses: softprops/action-gh-release@v1
-#        with:
-#          tag_name: nightly-0.1-${{ github.run_number }}
-#          name: "Nightly Build ${{ github.run_number }}"
-#          body: "This is an automated release"
-#          draft: false
-#          prerelease: true
-#          files: ${{ vars.BIN_REPO }}/dist/*
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#
-##      - name: Upload artifacts
-##        uses: actions/upload-artifact@v4
-##        with:
-##          name: 'mtlb'
-##          path: |
-##            ${{ vars.BIN_REPO }}/dist/mtlb-arm64
-##            ${{ vars.BIN_REPO }}/dist/mtlb-mips
+#          name: 'mtlb'
+#          path: |
+#            ${{ vars.BIN_REPO }}/dist/mtlb-arm64
+#            ${{ vars.BIN_REPO }}/dist/mtlb-mips
