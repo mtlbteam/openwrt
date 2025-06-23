@@ -4,7 +4,7 @@ on:
   push:
 
 jobs:
-  build-web:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Use Node.js 20.x
@@ -72,10 +72,22 @@ jobs:
         working-directory: ${{ vars.BIN_REPO }}
         run: upx --best --lzma dist/mtlb-mips
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
         with:
-          name: 'mtlb'
-          path: |
-            ${{ vars.BIN_REPO }}/dist/mtlb-arm64
-            ${{ vars.BIN_REPO }}/dist/mtlb-mips
+          tag_name: nightly-0.1-${{ github.run_number }}
+          name: "Nightly Build ${{ github.run_number }}"
+          body: "This is an automated release"
+          draft: false
+          prerelease: true
+          files: ${{ vars.BIN_REPO }}/dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+#      - name: Upload artifacts
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: 'mtlb'
+#          path: |
+#            ${{ vars.BIN_REPO }}/dist/mtlb-arm64
+#            ${{ vars.BIN_REPO }}/dist/mtlb-mips
