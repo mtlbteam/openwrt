@@ -74,6 +74,7 @@ jobs:
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
+        working-directory: ${{ vars.BIN_REPO }}
         with:
           name: 'mtlb'
           path: |
