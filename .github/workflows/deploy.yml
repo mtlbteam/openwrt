@@ -37,8 +37,11 @@ jobs:
         working-directory: ${{ vars.WEB_REPO }}
         run: npm run build
 
+      - name: Make assets dir
+        run: mkdir -p ${{ vars.BIN_REPO }}/internal/web
+
       - name: Copy web
-        run: cp ${{ vars.WEB_REPO }}/dist ${{ vars.BIN_REPO }}/internal/web
+        run: cp -r ${{ vars.WEB_REPO }}/dist ${{ vars.BIN_REPO }}/internal/web
 
       - name: Build arm64
         working-directory: ${{ vars.BIN_REPO }}
